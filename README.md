@@ -2,6 +2,7 @@
 
 A FastAPI web application that runs a multi-agent research workflow. Given a topic, it generates a comprehensive research report using a pipeline of specialized AI agents.
 
+![Screenshot](docs/screenshot.png)
 
 ---
 

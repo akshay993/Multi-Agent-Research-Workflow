@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 def index():
-    with open("index.html") as f:
+    with open("static/index.html") as f:
         return f.read()
 
 
