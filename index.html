@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Agent</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #ffffff;
+      color: #1e293b;
+      min-height: 100vh;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .header { margin-bottom: 2rem; text-align: center; }
+    h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.6rem; }
+    .subtitle { font-size: 0.95rem; color: #64748b; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    textarea {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      color: #1e293b;
+      font-family: inherit;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      padding: 0.75rem;
+      resize: vertical;
+      min-height: 140px;
+      outline: none;
+    }
+
+    textarea:focus { border-color: #4f6ef7; }
+    textarea::placeholder { color: #94a3b8; }
+
+    .form-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
+
+    .btn-primary { background: #4f6ef7; color: #fff; flex: 1; }
+    .btn-primary:hover:not(:disabled) { background: #3b5bdb; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: transparent;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-ghost:hover:not(:disabled) { background: #e2e8f0; color: #1e293b; }
+
+    .error-msg {
+      font-size: 0.8rem;
+      color: #ef4444;
+      margin-top: 0.5rem;
+      min-height: 1.2rem;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .panel-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .status-badge.running   { background: #fefce8; color: #b45309; border: 1px solid #fde68a; }
+    .status-badge.completed { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .status-badge.failed    { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .status-badge.pending   { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+    .spinner {
+      width: 9px; height: 9px;
+      border: 2px solid rgba(180,83,9,0.2);
+      border-top-color: #b45309;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .spinner-white {
+      width: 11px; height: 11px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .steps { list-style: none; }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      position: relative;
+    }
+
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 0.625rem;
+      top: 2rem;
+      bottom: 0;
+      width: 1px;
+      background: #e2e8f0;
+    }
+
+    .step-dot {
+      width: 1.25rem; height: 1.25rem;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+      margin-top: 0.1rem;
+    }
+
+    .step-dot.pending   { background: #f1f5f9; border: 1px solid #e2e8f0; color: #94a3b8; }
+    .step-dot.running   { background: #fefce8; border: 1px solid #fde68a; }
+    .step-dot.completed { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+    .step-dot.failed    { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+
+    .dot-spinner {
+      width: 7px; height: 7px;
+      border: 1.5px solid rgba(180,83,9,0.2);
+      border-top-color: #b45309;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .step-body { flex: 1; min-width: 0; }
+
+    .step-agent-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      margin-bottom: 0.2rem;
+    }
+
+    .step-desc { font-size: 0.8rem; color: #64748b; line-height: 1.5; }
+
+    .result-card { display: none; }
+    .result-card.visible { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.875rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .result-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+    }
+
+    .markdown-body { font-size: 0.9rem; line-height: 1.8; color: #475569; }
+
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+      color: #1e293b;
+      margin: 1.5em 0 0.5em;
+      font-weight: 600;
+    }
+
+    .markdown-body h1 { font-size: 1.4rem; }
+    .markdown-body h2 { font-size: 1.1rem; padding-bottom: 0.35rem; border-bottom: 1px solid #e2e8f0; }
+    .markdown-body h3 { font-size: 0.95rem; }
+
+    .markdown-body p { margin: 0.6em 0; }
+    .markdown-body a { color: #4f6ef7; text-decoration: none; }
+    .markdown-body a:hover { text-decoration: underline; }
+    .markdown-body ul, .markdown-body ol { padding-left: 1.5rem; margin: 0.5em 0; }
+    .markdown-body li { margin: 0.25em 0; }
+
+    .markdown-body code {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 0.1em 0.4em;
+      border-radius: 3px;
+      font-size: 0.82em;
+      color: #4f6ef7;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    .markdown-body pre {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 0.75em 0;
+    }
+
+    .markdown-body pre code { background: none; border: none; padding: 0; color: #1e293b; font-size: 0.85em; }
+
+    .markdown-body blockquote {
+      border-left: 2px solid #4f6ef7;
+      padding-left: 0.875rem;
+      color: #64748b;
+      margin: 0.75em 0;
+      font-style: italic;
+    }
+
+    .markdown-body table { width: 100%; border-collapse: collapse; margin: 0.75em 0; font-size: 0.85rem; }
+    .markdown-body th, .markdown-body td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; }
+    .markdown-body th { background: #f1f5f9; color: #1e293b; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <h1>Multi-Agent Research Workflow</h1>
+      <p class="subtitle">From a single prompt to a polished research report.</p>
+    </div>
+
+    <div class="two-col">
+      <!-- Form -->
+      <div class="card">
+        <label class="form-label" for="prompt">Research Topic</label>
+        <textarea id="prompt" placeholder="Enter a topic and the agent workflow will generate a comprehensive report.&#10;&#10;e.g. The current state of quantum computing"></textarea>
+        <div class="form-actions">
+          <button class="btn btn-ghost" onclick="document.getElementById('prompt').value = ''">Clear</button>
+          <button class="btn btn-primary" id="submit-btn" onclick="startResearch()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Generate Report
+          </button>
+        </div>
+        <p id="form-error" class="error-msg"></p>
+      </div>
+
+      <!-- Progress panel -->
+      <div class="card" id="progress-panel" style="display:none">
+        <div class="panel-header">
+          <span class="panel-label">Workflow Progress</span>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <div id="report-status" class="status-badge pending">Pending</div>
+            <button class="btn btn-ghost" id="clear-btn" onclick="clearProgress()" style="display:none;padding:0.25rem 0.5rem;font-size:0.75rem;">Clear</button>
+          </div>
+        </div>
+        <ul class="steps" id="steps-list"></ul>
+      </div>
+    </div>
+
+    <!-- Result panel -->
+    <div class="card result-card" id="result-panel">
+      <div class="result-header">
+        <span class="result-title">Research Report</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <span class="status-badge completed">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            Completed
+          </span>
+          <button class="btn btn-ghost" id="download-btn" onclick="downloadReport()" style="padding:0.25rem 0.75rem;font-size:0.75rem;">↓ Download .md</button>
+        </div>
+      </div>
+      <div class="markdown-body" id="report-content"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const AGENT_META = {
+      planner_agent:    { label: 'Planner',    color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.2)' },
+      researcher_agent: { label: 'Researcher', color: '#38bdf8', bg: 'rgba(56,189,248,0.1)',  border: 'rgba(56,189,248,0.2)'  },
+      writer_agent:     { label: 'Writer',     color: '#4ade80', bg: 'rgba(74,222,128,0.1)',  border: 'rgba(74,222,128,0.2)'  },
+      editor_agent:     { label: 'Editor',     color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.2)'  },
+    };
+
+    let currentEventSource = null;
+    let currentMarkdown = null;
+
+    function startResearch() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const errEl = document.getElementById('form-error');
+      errEl.textContent = '';
+
+      if (!prompt) {
+        errEl.textContent = 'Please enter a research topic.';
+        return;
+      }
+
+      if (currentEventSource) { currentEventSource.close(); currentEventSource = null; }
+
+      document.getElementById('steps-list').innerHTML = '';
+      document.getElementById('report-content').innerHTML = '';
+      document.getElementById('result-panel').classList.remove('visible');
+      document.getElementById('clear-btn').style.display = 'none';
+      setReportStatus('running');
+      document.getElementById('progress-panel').style.display = 'block';
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner-white"></div> Generating...`;
+
+      fetch('/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      })
+        .then(r => r.json())
+        .then(({ report_id }) => openStream(report_id))
+        .catch(err => {
+          errEl.textContent = 'Failed to start: ' + err.message;
+          resetBtn();
+        });
+    }
+
+    function resetBtn() {
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Report`;
+    }
+
+    function openStream(reportId) {
+      const es = new EventSource(`/reports/${reportId}/stream`);
+      currentEventSource = es;
+
+      es.onmessage = (event) => {
+        let data;
+        try { data = JSON.parse(event.data); } catch { return; }
+        if (data.ping || data.error) return;
+
+        renderSteps(data.steps || []);
+        setReportStatus(data.status);
+
+        if (data.status === 'completed' || data.status === 'failed') {
+          es.close();
+          currentEventSource = null;
+          resetBtn();
+          document.getElementById('clear-btn').style.display = 'inline-flex';
+          if (data.status === 'completed') fetchReport(reportId);
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+        currentEventSource = null;
+        resetBtn();
+      };
+    }
+
+    function renderSteps(steps) {
+      const list = document.getElementById('steps-list');
+      list.innerHTML = '';
+
+      steps.forEach(step => {
+        const am = AGENT_META[step.agent_type] || { label: step.agent_type, color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.2)' };
+
+        let dotContent, dotClass;
+        switch (step.status) {
+          case 'running':
+            dotClass = 'running';
+            dotContent = `<div class="dot-spinner"></div>`;
+            break;
+          case 'completed':
+            dotClass = 'completed';
+            dotContent = `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+            break;
+          case 'failed':
+            dotClass = 'failed';
+            dotContent = `✗`;
+            break;
+          default:
+            dotClass = 'pending';
+            dotContent = `·`;
+        }
+
+        const li = document.createElement('li');
+        li.className = 'step';
+        li.innerHTML = `
+          <div class="step-dot ${dotClass}">${dotContent}</div>
+          <div class="step-body">
+            <span class="step-agent-badge" style="color:${am.color};background:${am.bg};border:1px solid ${am.border};">${am.label}</span>
+            <div class="step-desc">${escapeHtml(step.description)}</div>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function setReportStatus(status) {
+      const el = document.getElementById('report-status');
+      const configs = {
+        running:   { cls: 'running',   html: `<div class="spinner"></div> Running` },
+        completed: { cls: 'completed', html: `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Completed` },
+        failed:    { cls: 'failed',    html: `✗ Failed` },
+        pending:   { cls: 'pending',   html: `Pending` },
+      };
+      const c = configs[status] || configs.pending;
+      el.className = `status-badge ${c.cls}`;
+      el.innerHTML = c.html;
+    }
+
+    function fetchReport(reportId) {
+      fetch(`/reports/${reportId}`)
+        .then(r => r.json())
+        .then(({ result }) => {
+          if (result) {
+            currentMarkdown = result;
+            document.getElementById('report-content').innerHTML = marked.parse(result);
+            document.getElementById('result-panel').classList.add('visible');
+          }
+        });
+    }
+
+    function downloadReport() {
+      if (!currentMarkdown) return;
+      const blob = new Blob([currentMarkdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'report.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearProgress() {
+      document.getElementById('progress-panel').style.display = 'none';
+      document.getElementById('result-panel').classList.remove('visible');
+      document.getElementById('steps-list').innerHTML = '';
+      document.getElementById('report-content').innerHTML = '';
+      document.getElementById('clear-btn').style.display = 'none';
+      currentMarkdown = null;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+  </script>
+</body>
+</html>
