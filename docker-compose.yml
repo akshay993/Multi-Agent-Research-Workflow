@@ -3,7 +3,7 @@ version: "3.9"
 services:
   app:
     build: .
-    container_name: research-agent-app
+    container_name: research-workflow-app
     ports:
       - "8000:8000"
     volumes:
@@ -11,13 +11,15 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
     depends_on:
       - db
     restart: unless-stopped
 
   db:
     image: postgres:16-alpine
-    container_name: research-agent-postgres
+    container_name: research-workflow-postgres-db
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
