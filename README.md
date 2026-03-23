@@ -28,26 +28,13 @@ A FastAPI web application that runs a multi-agent research workflow. Given a top
 5. The final report is persisted to the database and returned on request
 6. The completed report is available to download
 
-```
-  User Prompt
-       │
-       ▼
-  Planner       — breaks prompt into ordered steps
-       │
-       ▼
-  Researcher    — searches web, arXiv, Wikipedia
-       │
-       ▼
-  Writer        — drafts report from findings
-       │
-       ▼
-  Editor        — polishes into final report
-       │
-       ▼
-  Final Report  — saved to DB
+---
 
-  Each step streams live progress to the frontend via SSE.
-```
+## Known Limitations
+
+- **No cancellation** — once a report is started, it cannot be stopped; the workflow continues running even if the client disconnects
+- **No retry on failure** — a single transient LLM or tool call error fails the entire workflow
+- **No resume on failure** — failed reports must be resubmitted from scratch; no partial progress is preserved
 
 ---
 
@@ -101,7 +88,3 @@ The app will be available at [http://localhost:8000](http://localhost:8000).
 | `make up` | Start services |
 | `make down` | Stop services |
 | `make clean` | Stop services and remove volumes |
-| `make format` | Auto-format code with black and isort |
-| `make lint` | Run flake8 linter |
-| `make check` | Run formatter, linter, and type checker |
-| `make help` | List all available commands |
