@@ -6,16 +6,6 @@ A FastAPI web application that runs a multi-agent research workflow. Given a top
 
 ---
 
-## Tech Stack
-
-| | |
-|---------|-------------|
-| Backend | FastAPI, PostgreSQL, Docker |
-| Frontend | HTML, CSS, JavaScript |
-| LLM | Claude Sonnet |
-
----
-
 ## How it works
 
 1. User submits a research prompt via the web UI
@@ -64,7 +54,15 @@ A FastAPI web application that runs a multi-agent research workflow. Given a top
 cp .env.example .env
 ```
 
-This creates a `.env` file from the template. Open it and add your API keys and database credentials.
+This creates a `.env` file from the template. Fill in your API keys and database credentials:
+
+```
+ANTHROPIC_API_KEY=        # Anthropic API key
+TAVILY_API_KEY=           # Tavily API key
+POSTGRES_USER=            # Postgres username
+POSTGRES_PASSWORD=        # Postgres password
+POSTGRES_DB=              # Postgres database name
+```
 
 **2. Build and start the app:**
 
