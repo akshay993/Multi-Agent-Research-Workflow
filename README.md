@@ -86,3 +86,9 @@ The app will be available at [http://localhost:8000](http://localhost:8000).
 | `make up` | Start services |
 | `make down` | Stop services |
 | `make clean` | Stop services and remove volumes |
+
+---
+
+## Questions
+
+Open an issue — it's the easiest way to get a response and keeps the discussion visible to others.
