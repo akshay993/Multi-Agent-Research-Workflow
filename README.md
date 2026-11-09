@@ -25,6 +25,9 @@ A FastAPI web application that runs a multi-agent research workflow. Given a top
 - **No cancellation** — once a report is started, it cannot be stopped; the workflow continues running even if the client disconnects
 - **No retry on failure** — a single transient LLM or tool call error fails the entire workflow
 - **No resume on failure** — failed reports must be resubmitted from scratch; no partial progress is preserved
+- **No prompt-injection checks** — user input and fetched web content are passed to the LLM unfiltered, and report Markdown is rendered in the UI without sanitising (XSS risk)
+- **Local use only** — no authentication, rate limiting or spend caps, and report IDs are sequential, and workflow state is held in process memory (single instance only). There is no deployment plan right now; these would be addressed before exposing it publicly
+- **No tests or evals yet** — there is no automated test suite and output quality isn't measured; both are planned to be added
 
 ---
 
